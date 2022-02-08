@@ -90,9 +90,12 @@ function createProductItemElement({ sku, name, image }) {
 }
 
 function listarProdutos() {
+  const cart = document.querySelector('.items');
+  cart.appendChild(createCustomElement('span', 'loading', 'loading...'));
   fetch('https://api.mercadolibre.com/sites/MLB/search?q=computador')
     .then((r) => r.json())
     .then((json) => {
+      document.querySelector('.loading').remove();
       const Resultsjson = json.results;
       console.log(Resultsjson);
       Resultsjson.forEach((computador) => {
