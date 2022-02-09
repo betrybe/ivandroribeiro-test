@@ -22,33 +22,21 @@ function saveLocalStorage() {
   localStorage.setItem('card', getCartList);
 }
 
-function sumCart() {
+function somarlista() {
   const getCartList = document.querySelectorAll('.cart__item'); 
-  const list = [];
+  const lista = [];
   getCartList.forEach((item) => {
-    const price = Number(item.innerText.split('$')[1]);
-    list.push(price);
+    const preco = Number(item.innerText.split('$')[1]);
+    lista.push(preco);
   });
-  const sum = list.reduce((a, b) => a + b, 0);
-  document.querySelector('.total-price').innerText = sum;
-}
-
-function criarTituloPreco() {
-  const preco = document.querySelector('.cart');
-  preco.appendChild(createCustomElement('span', 'price', 'Preço Total: $'));
-
-  const somaPreco = localStorage.getItem('sumPrice');
-  if (somaPreco == null) {
-    preco.appendChild(createCustomElement('span', 'total-price', '0'));
-  } else {
-    preco.appendChild(createCustomElement('span', 'total-price', `${somaPreco}`));
-  }
+  const soma = lista.reduce((acc, obj) => acc + obj, 0);
+  document.querySelector('.total-price').innerText = parseFloat(soma.toFixed(2));
 }
 
 function cartItemClickListener(event) {
   event.target.remove();
   saveLocalStorage();
-  sumCart();
+  somarlista();
 }
 
 function loadLocalStorage() {
@@ -72,7 +60,7 @@ function clearItemClickListener() {
   localStorage.clear();
   const getCartList = document.querySelector(cartItems);
   getCartList.innerHTML = localStorage.getItem('card');
-  sumCart();
+  somarlista();
 }
 
 function clearCart() {
@@ -93,24 +81,20 @@ function clearCart() {
     };
     createCartItemElement(product);
     saveLocalStorage();   
-    sumCart();
+    somarlista();
     });
 }
 
 function createProductItemElement({ sku, name, image }) {
   const items = document.querySelector('.items');
   const section = document.createElement('section');
-  
   section.className = 'item';
-
   section.appendChild(createCustomElement('span', 'item__sku', sku));
   section.appendChild(createCustomElement('span', 'item__title', name));
   section.appendChild(createProductImageElement(image));
   section.appendChild(createCustomElement('button', 'item__add', 'Adicionar ao carrinho!')) 
   .addEventListener('click', adiconarlista);
-
   items.appendChild(section);
-
   return section;
 }
 
@@ -136,6 +120,6 @@ function listarProdutos() {
 window.onload = () => {
   loadLocalStorage();
   listarProdutos();
-  criarTituloPreco();
+  somarlista();
   clearCart();
-}; 
+};
