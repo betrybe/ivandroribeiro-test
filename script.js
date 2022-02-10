@@ -1,3 +1,4 @@
+const cartItems = '.cart__items';
 function createProductImageElement(imageSource) {
   const img = document.createElement('img');
   img.className = 'item__image';
@@ -8,36 +9,117 @@ function createProductImageElement(imageSource) {
 function createCustomElement(element, className, innerText) {
   const e = document.createElement(element);
   e.className = className;
-  e.innerText = innerText;
+  e.innerText = innerText;  
   return e;
-}
-
-function createProductItemElement({ sku, name, image }) {
-  const section = document.createElement('section');
-  section.className = 'item';
-
-  section.appendChild(createCustomElement('span', 'item__sku', sku));
-  section.appendChild(createCustomElement('span', 'item__title', name));
-  section.appendChild(createProductImageElement(image));
-  section.appendChild(createCustomElement('button', 'item__add', 'Adicionar ao carrinho!'));
-
-  return section;
 }
 
 function getSkuFromProductItem(item) {
   return item.querySelector('span.item__sku').innerText;
 }
 
+function saveLocalStorage() {
+  const getCartList = document.querySelector(cartItems).innerHTML;
+  localStorage.setItem('card', getCartList);
+}
+
+function somarlista() {
+  const getCartList = document.querySelectorAll('.cart__item'); 
+  const lista = [];
+  getCartList.forEach((item) => {
+    const preco = Number(item.innerText.split('$')[1]);
+    lista.push(preco);
+  });
+  const soma = lista.reduce((acc, obj) => acc + obj, 0);
+  document.querySelector('.total-price').innerText = parseFloat(soma.toFixed(2));
+}
+
 function cartItemClickListener(event) {
-  // coloque seu código aqui
+  event.target.remove();
+  saveLocalStorage();
+  somarlista();
+}
+
+function loadLocalStorage() {
+  const getCartList = document.querySelector(cartItems);
+  getCartList.innerHTML = localStorage.getItem('card');
+  getCartList.addEventListener('click', cartItemClickListener);
 }
 
 function createCartItemElement({ sku, name, salePrice }) {
   const li = document.createElement('li');
+  const ol = document.querySelector(cartItems);
+  
   li.className = 'cart__item';
   li.innerText = `SKU: ${sku} | NAME: ${name} | PRICE: $${salePrice}`;
   li.addEventListener('click', cartItemClickListener);
+  ol.appendChild(li);
   return li;
 }
 
-window.onload = () => { };
+function clearItemClickListener() {
+  localStorage.clear();
+  const getCartList = document.querySelector(cartItems);
+  getCartList.innerHTML = localStorage.getItem('card');
+  somarlista();
+}
+
+function clearCart() {
+  const clearButton = document.querySelector('.empty-cart');
+  clearButton.addEventListener('click', clearItemClickListener);
+}
+
+ function adiconarlista(event) {
+  // modifiquei aqui
+  const itemID = getSkuFromProductItem(event.target.parentElement);
+  fetch(`https://api.mercadolibre.com/items/${itemID}`)
+  .then((response) => response.json())
+  .then((json) => {
+    const product = {
+      sku: json.id,
+      name: json.title,
+      salePrice: json.price,
+    };
+    createCartItemElement(product);
+    saveLocalStorage();   
+    somarlista();
+    });
+}
+
+function createProductItemElement({ sku, name, image }) {
+  const items = document.querySelector('.items');
+  const section = document.createElement('section');
+  section.className = 'item';
+  section.appendChild(createCustomElement('span', 'item__sku', sku));
+  section.appendChild(createCustomElement('span', 'item__title', name));
+  section.appendChild(createProductImageElement(image));
+  section.appendChild(createCustomElement('button', 'item__add', 'Adicionar ao carrinho!')) 
+  .addEventListener('click', adiconarlista);
+  items.appendChild(section);
+  return section;
+}
+
+function listarProdutos() {
+  const container = document.querySelector('.items');
+  container.appendChild(createCustomElement('span', 'loading', 'loading...'));
+  fetch('https://api.mercadolibre.com/sites/MLB/search?q=computador')
+   .then((r) => r.json())
+   .then((json) => {
+   document.querySelector('.loading').remove();
+      const Resultsjson = json.results;
+      console.log(Resultsjson);
+      Resultsjson.forEach((computador) => {
+       createProductItemElement({
+          sku: computador.id, 
+          name: computador.title, 
+          image: computador.thumbnail,
+        });
+      });
+ });
+}
+
+window.onload = () => {
+  loadLocalStorage();
+  listarProdutos();
+  somarlista();
+  clearCart();
+};
